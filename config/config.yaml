@@ -1,0 +1,79 @@
+# Attack Comparison Configuration
+# ================================
+# 
+# Available models: CLIP, FARE, TeCoA, PMG, TRADES, AUDIENCE, MobileCLIP, MobileCLIP2
+# Available datasets: cifar10, cifar100, STL10, ImageNet, Caltech101, Caltech256,
+#                     OxfordPets, Flowers102, Food101, DTD, EuroSAT, StanfordCars,
+#                     SUN397, FGVCAircraft, Country211, PCAM
+# Available attacks: pgd, CW, AA, featurestat, sapa, sflow
+
+models:
+  - CLIP
+  - FARE
+  - TeCoA
+  - PMG
+  - TRADES
+#  - AUDIENCE
+#  - MobileCLIP
+#  - MobileCLIP2
+
+datasets:
+#  - cifar10
+#  - cifar100
+#  - Country211
+#  - Flowers102
+#  - PCAM
+#  - STL10
+  
+  - Caltech101
+  - Caltech256
+  - DTD  
+  - EuroSAT  
+  - FGVCAircraft 
+  - Food101 
+  - ImageNet
+  - OxfordPets 
+  - StanfordCars 
+  - SUN397  
+  
+  
+
+
+attacks:
+  - pgd
+  - CW
+  - sapa
+#  - AA
+
+
+epsilons:
+  - 1
+  - 2
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5  # Auto-compute stepsize = factor * epsilon / iters (Madry et al. standard)
+  # stepsize: 0.001  # Optional: override auto-computation with fixed stepsize
+  tta_frequency: 10  # LLaVA TTA update frequency (SAPA only)
+  embedding_loss_weight: 0.5
+  semantic_anchor_weight: 0.3
+  contrastive_loss_weight: 0.2
+  adversarial_loss_weight: 0.3
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100  # Number of test samples per dataset (default: 100, set to null for all samples)
+
+output:
+  output_dir: "./attack_comparison_results"
+  visualize: false
+  debug: false  # Set to true for verbose output (semantic targeting details, embeddings, etc.)
+  # Priority 1B: Cross-Model STA Evaluation
+  compute_cross_model_sta: true  # Enable cross-model STA evaluation (addresses reviewer concern W1)
+  eval_model: "openclip_vit_l"  # Independent evaluation model (openclip_vit_l, openclip_vit_h, siglip)

@@ -1,0 +1,33 @@
+# Test Original SAPA Design from GitHub
+models:
+  - TeCoA
+  - FARE
+
+datasets:
+  - ImageNet
+  - OxfordPets
+
+attacks:
+  - sapa
+
+epsilons:
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+  tta_frequency: 10
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100
+
+output:
+  output_dir: "./attack_comparison_results/original_sapa_test"
+  visualize: false
+  debug: false

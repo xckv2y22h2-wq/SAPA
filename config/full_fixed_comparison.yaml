@@ -1,0 +1,37 @@
+# Full Comparison: Fixed SAPA vs PGD vs CW on CLIP and Robust Models
+models:
+  - CLIP
+  - TeCoA
+  - FARE
+
+datasets:
+  - ImageNet
+  - OxfordPets
+
+# We'll run multiple configs for different attacks
+# First run with pgd, then CW, then sapa
+
+epsilons:
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+  # Higher adversarial weight for better attack success on robust models
+  adversarial_loss_weight: 1.0
+  # Higher semantic alignment weight for better STA
+  semantic_alignment_weight: 10.0
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100
+
+output:
+  output_dir: "./attack_comparison_results/full_fixed_comparison"
+  visualize: false
+  debug: false

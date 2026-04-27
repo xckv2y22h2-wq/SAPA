@@ -1,0 +1,51 @@
+# Targeted Baseline Comparison Configuration (Priority 1A)
+# ================================
+#
+# This config runs targeted PGD and targeted C&W against SAPA
+# to address Reviewer Concern W2: "Missing obvious baseline"
+#
+# All targeted attacks use the SAME semantic anchor class as SAPA
+
+models:
+  - CLIP
+  - TeCoA
+  - FARE
+  - PMG
+  - TRADES
+
+datasets:
+  - OxfordPets      # Fine-grained, 37 classes
+  - ImageNet        # Standard benchmark, 100 classes
+  - Caltech101      # Medium diversity, 101 classes
+
+# Compare: targeted baselines vs SAPA
+attacks:
+  - targeted_pgd    # Priority 1A baseline
+  - targeted_cw     # Priority 1A baseline
+  - sapa           # Our method
+
+epsilons:
+  - 1              # 1/255 = 0.0039
+  - 2              # 2/255 = 0.0078
+  - 4              # 4/255 = 0.0157
+  - 8              # 8/255 = 0.0314
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+  # Semantic targeting uses same CLIPSemanticAnchor as SAPA
+  semantic_strategy: similar  # Same strategy SAPA uses
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100  # For initial validation, use null for full evaluation
+
+output:
+  output_dir: "./targeted_baseline_results"
+  visualize: false
+  debug: false
+  compute_cross_model_sta: false  # Set to true if you also want cross-model STA

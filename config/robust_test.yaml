@@ -1,0 +1,37 @@
+# Test Final-Layer-Only SAPA on Robust Models
+models:
+  - CLIP
+  - TeCoA
+  - FARE
+
+datasets:
+  - OxfordPets
+
+attacks:
+  - sapa
+
+epsilons:
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+  tta_frequency: 10
+  embedding_loss_weight: 0.2
+  semantic_anchor_weight: 0.3
+  contrastive_loss_weight: 0.2
+  adversarial_loss_weight: 0.5
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100
+
+output:
+  output_dir: "./attack_comparison_results"
+  visualize: false
+  debug: false

@@ -1,0 +1,32 @@
+# Full Comparison: SAPA variants vs PGD vs CW on Robust Models
+models:
+  - TeCoA
+  - FARE
+
+datasets:
+  - ImageNet
+  - OxfordPets
+
+# We'll run multiple configs for different attacks
+# First run with pgd, then CW, then sapa variants
+
+epsilons:
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100
+
+output:
+  output_dir: "./attack_comparison_results/full_comparison"
+  visualize: false
+  debug: false

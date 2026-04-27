@@ -1,0 +1,36 @@
+# Test Fixed SAPA - Higher Adversarial Weight
+models:
+  - TeCoA
+  - FARE
+
+datasets:
+  - ImageNet
+
+attacks:
+  - sapa
+
+epsilons:
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+  tta_frequency: 10
+  embedding_loss_weight: 0.5
+  semantic_anchor_weight: 0.3
+  contrastive_loss_weight: 0.2
+  adversarial_loss_weight: 1.0  # Higher weight for better attack success
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 100
+
+output:
+  output_dir: "./attack_comparison_results/test_fixed_sapa"
+  visualize: false
+  debug: false

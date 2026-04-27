@@ -1,0 +1,38 @@
+# Quick comparison test - fewer samples for fast results
+models:
+  - CLIP
+  - TeCoA
+  - FARE
+
+datasets:
+  - OxfordPets
+
+attacks:
+  - sapa
+
+epsilons:
+  - 4
+  - 8
+
+attack:
+  attack_iters: 30
+  stepsize_factor: 2.5
+  tta_frequency: 10
+  embedding_loss_weight: 0.2
+  semantic_anchor_weight: 0.3
+  contrastive_loss_weight: 0.2
+  adversarial_loss_weight: 0.5
+  # No sapa_variant = final-layer-only
+
+model_settings:
+  arch: "ViT-B/32"
+  model_dir: "./models/"
+
+data:
+  data_path: "./datasets/"
+  num_test_samples: 50  # Quick test with 50 samples
+
+output:
+  output_dir: "./attack_comparison_results/quick_compare_finalonly"
+  visualize: false
+  debug: false
