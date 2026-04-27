@@ -29,7 +29,7 @@ from pathlib import Path
 import torch.nn.functional as F
 from typing import Optional, List, Dict, Tuple
 
-# by Tom on 2026-01-06, import get_dataset and model_loader from replace.tv_datasets and replace.model_loader
+# import get_dataset and model_loader from replace.tv_datasets and replace.model_loader
 from replace.tv_datasets.dataset_ops import get_dataset
 from replace.model_loader import (
     load_model, load_clip, load_tecoa, load_fare, load_pmg, 
@@ -236,7 +236,7 @@ def parse_args():
     
     return parser.parse_args()
 
-''' commented by Tom on 2026-01-06, import from dataset_ops.py 
+''' import from dataset_ops.py 
 def get_dataset(args):
     """Load the specified dataset with appropriate transforms"""
     print(f"Loading dataset: {args.dataset} from {args.data_path}")
@@ -716,7 +716,7 @@ def get_text_tokens(texts, model, device):
         print("Using modified CLIP tokenizer")
         return clip.tokenize(texts).to(device)
 
-''' commented by Tom on 2026-01-06, use load_target_model 
+''' use load_target_model 
 def load_model(args, class_names):
     """Load model checkpoint"""
     print(f"=> Loading {args.model_type} model: {args.arch}")
