@@ -126,7 +126,7 @@ def create_default_config(output_path):
         f.write(f"# Available attacks: {AVAILABLE_ATTACKS}\n\n")
         yaml.dump(DEFAULT_CONFIG, f, default_flow_style=False, sort_keys=False)
     
-    print(f"✓ Created default config at: {output_path}")
+    print(f"Created default config at: {output_path}")
     return DEFAULT_CONFIG
 
 
@@ -193,12 +193,12 @@ def validate_config(config):
         warnings.append(f"Model directory does not exist: {model_dir}")
     
     if errors:
-        print("\n❌ Configuration errors:")
+        print("\n Configuration errors:")
         for e in errors:
             print(f"  - {e}")
     
     if warnings:
-        print("\n⚠ Configuration warnings:")
+        print("\n Configuration warnings:")
         for w in warnings:
             print(f"  - {w}")
     
@@ -675,9 +675,9 @@ def main():
                     print("Running command:", ' '.join(cmd))
                     try:
                         subprocess.run(cmd, check=True)
-                        print(f"✓ Successfully completed {attack} attack")
+                        print(f" Successfully completed {attack} attack")
                     except subprocess.CalledProcessError as e:
-                        print(f"✗ Error running {attack}: {e}")
+                        print(f" Error running {attack}: {e}")
                         failed.append((model_type, dataset, attack, epsilon))
     
     # Print progress summary
