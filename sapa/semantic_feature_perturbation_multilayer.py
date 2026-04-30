@@ -7,14 +7,8 @@ class SemanticFeatureSpacePerturbationMultiLayer:
         self.llava_adapter = llava_adapter
         self.device = device
         self.class_names = class_names
-
-        # CRITICAL: Convert CLIP to float32
         self.clip_model.float()
-
-        # Precompute class embeddings
         self.class_embeddings = self._compute_class_embeddings()
-
-        # Register hooks for multi-level features
         self.features = {}
         self._register_hooks()
 
@@ -35,7 +29,6 @@ class SemanticFeatureSpacePerturbationMultiLayer:
                 self.features[name] = output
             return hook
 
-        # Hook into specific transformer layers
         self.clip_model.visual.transformer.resblocks[3].register_forward_hook(
             get_activation('layer_3')
         )
@@ -62,7 +55,6 @@ class SemanticFeatureSpacePerturbationMultiLayer:
         debug=False
     ):
 
-        # Handle batch dimension
         if clean_image.dim() == 4:
             clean_image = clean_image.squeeze(0)
 
@@ -70,11 +62,8 @@ class SemanticFeatureSpacePerturbationMultiLayer:
             print(f"\n{'='*70}")
             print(f"Attacking: {self.class_names[true_label]} → {semantic_anchor_word}")
             print(f"{'='*70}\n")
-
-        # ===================================================================
+   
         # Step 1: Compute semantic target embedding
-        # ===================================================================
-
         wordnet_text = f"a photo of a {semantic_anchor_word}"
         wordnet_tokens = clip.tokenize([wordnet_text]).to(self.device)
 
@@ -85,10 +74,7 @@ class SemanticFeatureSpacePerturbationMultiLayer:
 
         semantic_target_embed = wordnet_embed
 
-        # ===================================================================
         # Step 2: Semantic-guided initialization
-        # ===================================================================
-
         if debug:
             print("\n[Phase 2 - Initialization] Semantic-guided initialization...")
 
@@ -104,18 +90,13 @@ class SemanticFeatureSpacePerturbationMultiLayer:
 
         current_text_embed = semantic_target_embed.clone()
         new_caption = None
-
-        # ===================================================================
+        
         # Step 3: Multi-layer optimization loop
-        # ===================================================================
-
         if debug:
             print(f"\n[Phase 2 - Optimization] Multi-layer optimization (L3, L6, L9 + Final)...")
 
         pred_idx = -1
         for iteration in range(attack_iters):
-
-            # === Phase 3: Reverse TTA ===
             llava_target_alignment = 0.0
             if self.llava_adapter is not None and tta_frequency > 0 and iteration % tta_frequency == 0 and iteration > 0:
                 if debug:
@@ -139,64 +120,43 @@ class SemanticFeatureSpacePerturbationMultiLayer:
                     print(f"  [Reverse TTA] Target alignment score: {llava_target_alignment:.3f}")
 
                 new_caption = llava_perception['caption']
-
-            # Forward pass
             adv_image = torch.clamp(clean_image + delta, 0, 1)
-
-            # Get final image embedding
             adv_img_embed = self.clip_model.encode_image(adv_image.unsqueeze(0))
             adv_img_embed = adv_img_embed / adv_img_embed.norm(dim=-1, keepdim=True)
             adv_img_embed = adv_img_embed.float()
-
-            # Extract features at multiple levels
             feat_3 = self.features['layer_3']
             feat_6 = self.features['layer_6']
             feat_9 = self.features['layer_9']
 
-            # ===================================================================
-            # Loss computation (multi-layer with two-stage approach)
-            # ===================================================================
-
             total_loss = 0
-
-            # Compute current alignment for adaptive weighting
             current_sta = (adv_img_embed @ current_text_embed.T).squeeze().item()
             current_true_sim = (adv_img_embed @ self.class_embeddings[true_label]).squeeze().item()
-
-            # Stage 1: First 40% of iterations - prioritize semantic alignment
-            # Stage 2: Remaining iterations - balance both objectives
             if iteration < attack_iters * 0.4:
-                # Stage 1: Heavy semantic alignment focus
                 sem_weight = semantic_alignment_weight * 1.5
                 adv_weight = adversarial_loss_weight * 0.5
             else:
-                # Stage 2: Adaptive based on current STA
                 if current_sta < 0.3:
-                    # Still poor semantic alignment - boost semantic
                     sem_weight = semantic_alignment_weight * 1.2
                     adv_weight = adversarial_loss_weight * 0.8
                 elif current_true_sim > 0.5:
-                    # Still close to true class - need more adversarial push
                     sem_weight = semantic_alignment_weight * 0.8
                     adv_weight = adversarial_loss_weight * 1.5
                 else:
-                    # Good balance - use configured weights
                     sem_weight = semantic_alignment_weight
                     adv_weight = adversarial_loss_weight
 
             # Loss 1: Final embedding alignment with semantic target
             final_alignment = (adv_img_embed @ current_text_embed.T).squeeze()
-            L_final = -final_alignment  # Maximize similarity
+            L_final = -final_alignment  
             total_loss += sem_weight * 0.3 * L_final
 
             # Loss 2: Multi-level feature alignment
             L_layer3 = self._compute_layer_alignment_loss(feat_3, current_text_embed)
             L_layer6 = self._compute_layer_alignment_loss(feat_6, current_text_embed)
             L_layer9 = self._compute_layer_alignment_loss(feat_9, current_text_embed)
-
-            total_loss += sem_weight * 0.15 * L_layer3  # Low-level features
-            total_loss += sem_weight * 0.2 * L_layer6   # Mid-level features
-            total_loss += sem_weight * 0.25 * L_layer9  # High-level features
+            total_loss += sem_weight * 0.15 * L_layer3  
+            total_loss += sem_weight * 0.2 * L_layer6   
+            total_loss += sem_weight * 0.25 * L_layer9  
 
             # Loss 3: Adversarial loss (push away from true class)
             true_class_embed = self.class_embeddings[true_label]
@@ -213,7 +173,7 @@ class SemanticFeatureSpacePerturbationMultiLayer:
 
             total_loss += final_adv_weight * L_adversarial
 
-            # Optimization step
+            # Optimization 
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()
@@ -264,25 +224,15 @@ class SemanticFeatureSpacePerturbationMultiLayer:
                 'l_inf_norm': l_inf_norm,
                 'l2_norm': l2_norm
             }
-
-        # Return with batch dimension for compatibility
         return final_adv_image.unsqueeze(0), attack_info
 
     def _semantic_guided_initialization(self, clean_image, semantic_target, epsilon, debug=False):
         clean_image_copy = clean_image.clone().requires_grad_(True)
-
-        # Get clean image embedding
         clean_embed = self.clip_model.encode_image(clean_image_copy.unsqueeze(0))
         clean_embed = clean_embed / clean_embed.norm(dim=-1, keepdim=True)
-
-        # Ensure both are float32
         clean_embed = clean_embed.float()
         semantic_target = semantic_target.float()
-
-        # Loss: move toward semantic target
         init_loss = -(clean_embed @ semantic_target.T).sum()
-
-        # Compute gradient
         init_loss.backward()
 
         with torch.no_grad():
@@ -295,36 +245,22 @@ class SemanticFeatureSpacePerturbationMultiLayer:
         return init_delta
 
     def _compute_layer_alignment_loss(self, layer_features, target_embed):
-        # Pool features if spatial
         if layer_features.dim() > 2:
             pooled = layer_features.mean(dim=1)
         else:
             pooled = layer_features
-
-        # Convert to float32
         pooled = pooled.float()
-
-        # Normalize
         pooled_norm = pooled / (pooled.norm(dim=-1, keepdim=True) + 1e-8)
-
-        # Project target embed to layer dimension
         target_dim = pooled_norm.shape[-1]
         target_projected = self._project_embedding(target_embed, target_dim)
-
-        # Ensure float32
         target_projected = target_projected.float()
-
-        # Compute alignment
         alignment = (pooled_norm @ target_projected.T).mean()
 
         return -alignment
 
     def _project_embedding(self, embed, target_dim):
-        # Ensure float32
         embed = embed.float()
-
         current_dim = embed.shape[-1]
-
         if current_dim == target_dim:
             return embed
         elif current_dim < target_dim:
