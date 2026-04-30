@@ -1,12 +1,6 @@
 """
 Adversarial Text Generation for Multi-Modal SAPA Attack
 
-Instead of asking LLaVA to describe the current image (which describes reality),
-we ask LLaVA to generate text descriptions of the TARGET class.
-This creates adversarial text that, when embedded, pulls the image toward the target.
-
-Author: Multi-Modal Attack Extension
-Date: 2025-01-17
 """
 
 import torch
@@ -14,17 +8,6 @@ from modified_clip import clip
 
 
 class AdversarialTextGenerator:
-    """
-    Generate adversarial text descriptions for target classes.
-
-    Key difference from original LLaVATextAdaptation:
-    - Original: "Describe this image" → describes current reality (cat)
-    - Adversarial: "Describe a {target_class}" → describes target (dog)
-
-    This creates aligned multi-modal optimization where both image and text
-    work toward the SAME target class.
-    """
-
     def __init__(self, device='cuda', use_llava=True):
         self.device = device
         self.use_llava = use_llava
@@ -135,15 +118,6 @@ Be specific and concise (1-2 sentences).<|im_end|>
 
 
 class MultiModalSemanticAttack:
-    """
-    Multi-Modal SAPA Attack with Adversarial Text Generation
-
-    Architecture:
-    - Visual modality: Perturb image toward target class
-    - Text modality: Generate adversarial text describing target class
-    - Both converge in shared CLIP embedding space
-    """
-
     def __init__(self, clip_model, device, class_names, use_llava_text=True):
         self.clip_model = clip_model
         self.device = device
