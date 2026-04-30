@@ -112,7 +112,7 @@ def parse_args():
 
 def print_attack_config(args):
     print("="*70)
-    print("WGSMA ATTACK CONFIGURATION")
+    print("SAPA ATTACK CONFIGURATION")
     print("="*70)
     print(f"Dataset:              {args.dataset}")
     print(f"Test samples:         {args.num_test_samples}")
@@ -191,7 +191,7 @@ def load_target_model(args, device, class_names=None):
     else:
         raise ValueError(f"Unknown model type: {args.model}")
     
-    print(f"✓ Loaded {args.model} ({args.arch})")
+    print(f" Loaded {args.model} ({args.arch})")
     print(f"  Is OpenCLIP: {getattr(model, 'is_openclip', False)}")
     print(f"  Has PromptLearner: {prompt_learner is not None}")
     
@@ -290,12 +290,12 @@ def main():
                     device=device
                 )
                 if cross_model_calculator.available:
-                    print(f"✓ Cross-model STA evaluation enabled")
+                    print(f" Cross-model STA evaluation enabled")
                 else:
-                    print(f"⚠ Cross-model STA calculator not available")
+                    print(f" Cross-model STA calculator not available")
                     cross_model_calculator = None
             except Exception as e:
-                print(f"⚠ Failed to initialize cross-model STA calculator: {e}")
+                print(f" Failed to initialize cross-model STA calculator: {e}")
                 cross_model_calculator = None
 
     # ===== 3. Run experiments =====
@@ -411,7 +411,7 @@ def main():
                                 print(f"      Cross-Model STA: {cross_sta:.3f} (drop: {sta_drop:.3f}, {sta_drop_pct:.1f}%)")
                     except Exception as e:
                         if args.verbose:
-                            print(f"      ⚠ Cross-model STA computation failed: {e}")
+                            print(f"      Cross-model STA computation failed: {e}")
 
                 # Collect results
                 result_dict = {
@@ -546,7 +546,7 @@ def main():
                 'evaluation_model': args.eval_model
             }
     else:
-        print("\n⚠ No results to compute metrics!")
+        print("\n No results to compute metrics!")
         summary = {
             'total_samples': total_samples,
             'successfully_attacked': 0,
@@ -617,7 +617,7 @@ def main():
                 'detailed_results': results
             }, f, indent=2)
         
-        print(f"✓ Detailed results saved to: {output_file}")
+        print(f" Detailed results saved to: {output_file}")
     else:
         print("No detailed results to save.")
     
