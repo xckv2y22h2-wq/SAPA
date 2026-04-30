@@ -207,7 +207,7 @@ def create_default_config(output_path):
         f.write(f"# Available datasets: {list(AVAILABLE_DATASETS.keys())}\n\n")
         yaml.dump(DEFAULT_CONFIG, f, default_flow_style=False, sort_keys=False)
     
-    print(f"✓ Created default config at: {output_path}")
+    print(f"Created default config at: {output_path}")
     return DEFAULT_CONFIG
 
 
@@ -270,12 +270,12 @@ def validate_config(config):
         warnings.append(f"Model directory does not exist: {model_dir}")
     
     if errors:
-        print("\n❌ Configuration errors:")
+        print("\nConfiguration errors:")
         for e in errors:
             print(f"  - {e}")
     
     if warnings:
-        print("\n⚠ Configuration warnings:")
+        print("\n Configuration warnings:")
         for w in warnings:
             print(f"  - {w}")
     
@@ -597,7 +597,7 @@ def generate_excel_report(results, output_path, config):
         config_df = pd.DataFrame(config_data)
         config_df.to_excel(writer, sheet_name='Configuration', index=False)
     
-    print(f"\n✓ Excel report saved to: {output_path}")
+    print(f"\n Excel report saved to: {output_path}")
     
     if HAS_OPENPYXL:
         format_excel_report(output_path)
@@ -661,7 +661,7 @@ def format_excel_report(filepath):
                 ws.column_dimensions[column_letter].width = adjusted_width
     
     wb.save(filepath)
-    print(f"✓ Applied formatting to Excel report")
+    print(f" Applied formatting to Excel report")
 
 
 def generate_csv_report(results, output_dir):
@@ -673,7 +673,7 @@ def generate_csv_report(results, output_dir):
             writer = csv.DictWriter(f, fieldnames=results[0].keys())
             writer.writeheader()
             writer.writerows(results)
-    print(f"✓ Raw data saved to: {raw_path}")
+    print(f" Raw data saved to: {raw_path}")
     
     summary_path = os.path.join(output_dir, 'sapa_comparison_summary.csv')
     with open(summary_path, 'w', newline='') as f:
@@ -724,7 +724,7 @@ def main():
     
     # Validate configuration
     if not validate_config(config):
-        print("\n❌ Configuration validation failed. Please fix errors and try again.")
+        print("\nConfiguration validation failed. Please fix errors and try again.")
         return
     
     # Print configuration summary
