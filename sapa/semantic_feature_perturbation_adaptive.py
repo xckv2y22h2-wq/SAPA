@@ -2,24 +2,6 @@ import torch
 from modified_clip import clip
 
 class SemanticFeatureSpacePerturbationAdaptive:
-    """
-    Adaptive SAPA: Combines multi-layer and final-layer optimization with configurable weights
-
-    This variant allows adaptive weighting between:
-    - Multi-layer features (L3, L6, L9) - better for robust models
-    - Final-layer features - better for STA on standard models
-
-    Usage:
-        # For standard models (CLIP): emphasize final layer
-        adaptive_sapa = SemanticFeatureSpacePerturbationAdaptive(..., layer_weights=[0.1, 0.1, 0.1, 0.7])
-
-        # For robust models (TeCoA, FARE): balance multi-layer and final
-        adaptive_sapa = SemanticFeatureSpacePerturbationAdaptive(..., layer_weights=[0.15, 0.2, 0.25, 0.4])
-
-        # Auto-adaptive: adjust weights based on prediction status
-        adaptive_sapa = SemanticFeatureSpacePerturbationAdaptive(..., adaptive=True)
-    """
-
     def __init__(self, clip_model, llava_adapter, device, class_names,
                  layer_weights=None, adaptive=False):
         self.clip_model = clip_model
