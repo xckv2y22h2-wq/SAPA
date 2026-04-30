@@ -4,25 +4,11 @@ from nltk.corpus import wordnet as wn
 
 
 class WordNetSemanticAnchor:
-    """
-    Phase 1: Generate and filter semantic anchors
-    
-    FULLY FIXED VERSION:
-    - Handles complex class names (e.g., "bonnet, poke bonnet")
-    - Relaxed filtering with fallback strategies
-    - Better WordNet query preprocessing
-    - DTYPE FIX: All computations in float32
-    """
-    
     def __init__(self, clip_model, device, class_names):
         self.clip_model = clip_model
         self.device = device
         self.class_names = class_names
-        
-        # Ensure CLIP is in float32 (should already be done in main script)
         self.clip_model.float()
-        
-        # Precompute class embeddings (will be float32)
         self.class_embeddings = self._compute_class_embeddings()
     
     def _compute_class_embeddings(self):
@@ -31,8 +17,6 @@ class WordNetSemanticAnchor:
             tokens = clip.tokenize(texts).to(self.device)
             embeddings = self.clip_model.encode_text(tokens)
             embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
-            
-            # CRITICAL FIX: Convert to float32
             embeddings = embeddings.float()
             
         return embeddings
@@ -72,8 +56,6 @@ class WordNetSemanticAnchor:
         candidates = set()
 
         if strategy == 'distant':
-            # DISTANT STRATEGY: Use high-level hypernyms (2-3 levels up)
-            # These should be farther from true class in embedding space
             print(f"  Using DISTANT strategy (high-level hypernyms)...")
             for synset in all_synsets:
                 # Get hypernyms at multiple levels
@@ -83,8 +65,6 @@ class WordNetSemanticAnchor:
                         word = lemma.name().replace('_', ' ')
                         candidates.add(word)
                         print(f"    Level {level+1} hypernym: {word}")
-
-                    # Get hypernyms of hypernyms (2 levels up)
                     if level < 2:  # Limit depth
                         for hyp2 in hyp.hypernyms():
                             for lemma in hyp2.lemmas():
@@ -92,7 +72,6 @@ class WordNetSemanticAnchor:
                                 candidates.add(word)
 
         else:
-            # Original strategies: similar, related
             for synset in all_synsets:
                 for lemma in synset.lemmas():
                     word = lemma.name().replace('_', ' ')
@@ -114,8 +93,6 @@ class WordNetSemanticAnchor:
                         for lemma in similar.lemmas():
                             word = lemma.name().replace('_', ' ')
                             candidates.add(word)
-        
-        # Remove originals
         for variant in class_name_variants:
             candidates.discard(variant)
         candidates.discard(class_name)
@@ -126,8 +103,6 @@ class WordNetSemanticAnchor:
         
         print(f"  Generated {len(candidates)} candidate words")
         print(f"    Sample: {list(candidates)[:5]}...")
-        
-        # ===== STRICT FILTERING =====
         strict_anchors = []
 
         for word in candidates:
@@ -137,8 +112,6 @@ class WordNetSemanticAnchor:
             with torch.no_grad():
                 embed = self.clip_model.encode_text(tokens)
                 embed = embed / embed.norm(dim=-1, keepdim=True)
-
-                # Ensure float32
                 embed = embed.float()
 
                 similarities = embed @ self.class_embeddings.T
@@ -146,7 +119,6 @@ class WordNetSemanticAnchor:
                 nearest_class = self.class_names[nearest_idx]
 
                 if nearest_idx != true_label:
-                    # For distant strategy, also track distance from true class
                     true_class_sim = similarities[0, true_label].item()
                     strict_anchors.append({
                         'word': word,
@@ -159,13 +131,11 @@ class WordNetSemanticAnchor:
 
         if strict_anchors:
             if strategy == 'distant':
-                # For DISTANT: prioritize anchors FAR from true class
                 strict_anchors.sort(key=lambda x: x['distance_from_true'], reverse=True)
                 best = strict_anchors[0]
                 print(f"  ✓ DISTANT anchor: '{best['word']}' → {best['target_class']} "
                       f"(sim: {best['similarity']:.3f}, dist_from_true: {best['distance_from_true']:.3f})")
             else:
-                # For similar/related: prioritize anchors CLOSE to target class
                 strict_anchors.sort(key=lambda x: x['similarity'], reverse=True)
                 best = strict_anchors[0]
                 print(f"  ✓ Strict anchor: '{best['word']}' → {best['target_class']} "
@@ -184,8 +154,6 @@ class WordNetSemanticAnchor:
                 with torch.no_grad():
                     embed = self.clip_model.encode_text(tokens)
                     embed = embed / embed.norm(dim=-1, keepdim=True)
-                    
-                    # CRITICAL FIX: Ensure float32
                     embed = embed.float()
                     
                     true_class_embed = self.class_embeddings[true_label].unsqueeze(0)
