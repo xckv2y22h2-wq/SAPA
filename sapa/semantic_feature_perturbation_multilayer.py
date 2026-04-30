@@ -2,19 +2,6 @@ import torch
 from modified_clip import clip
 
 class SemanticFeatureSpacePerturbationMultiLayer:
-    """
-    Phase 2: Core Semantic Perturbation Mechanism (Multi-Layer)
-
-    Multi-layer approach using intermediate features from layers 3, 6, 9.
-    This variant was tested in previous experiments and showed different
-    behavior on robust models compared to final-layer-only.
-
-    Integrates:
-    - Semantic-guided initialization
-    - Multi-level feature optimization (layers 3, 6, 9 + final)
-    - Phase 3 (LLaVA TTA) - called every N iterations
-    """
-
     def __init__(self, clip_model, llava_adapter, device, class_names):
         self.clip_model = clip_model
         self.llava_adapter = llava_adapter
