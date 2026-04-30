@@ -3,7 +3,6 @@ from modified_clip import clip
 import warnings
 
 class LLaVATextAdaptation:
-    """Phase 3: LLaVA-based adaptive caption generation"""
     
     def __init__(self, device='cuda'):
         self.device = device
@@ -34,11 +33,6 @@ class LLaVATextAdaptation:
         # Convert to PIL
         adv_image_pil = self._tensor_to_pil(adv_image_tensor)
 
-        # ===================================================================
-        # FIX: Use UNBIASED prompt - don't mention semantic anchor
-        # Old biased prompt: "Does it look like a {semantic_anchor_word}?"
-        # New unbiased prompt: "Describe this image in detail"
-        # ===================================================================
         prompt = """<|im_start|>system
 You are a helpful assistant.<|im_end|>
 <|im_start|>user
@@ -111,10 +105,6 @@ Describe this image in detail in one sentence. Focus on the main object and its 
         # Convert to PIL
         adv_image_pil = self._tensor_to_pil(adv_image_tensor)
 
-        # ===================================================================
-        # APPROACH 5: Ask LLaVA what the image RESEMBLES
-        # Prompt: Force a choice between true class and target
-        # ===================================================================
         prompt = f"""<|im_start|>system
 You are an image classification assistant. You must choose one option.<|im_end|>
 <|im_start|>user
@@ -145,10 +135,6 @@ Answer with ONLY the name of the breed you think it is.<|im_end|>
         response = self.processor.decode(output[0], skip_special_tokens=True)
         response = response.split("assistant\n")[-1].strip()
 
-        # ===================================================================
-        # Parse LLaVA's response and compute similarities
-        # ===================================================================
-        # Get embeddings for what LLaVA said vs what we want
         llava_response_embed = self.get_caption_embedding(f"a photo of a {response}")
 
         # Target: what we want it to look like
@@ -161,11 +147,6 @@ Answer with ONLY the name of the breed you think it is.<|im_end|>
         sim_to_target = self.compute_semantic_similarity(llava_response_embed, target_embed)
         sim_to_true = self.compute_semantic_similarity(llava_response_embed, true_embed)
 
-        # ====================================================================
-        # KEY METRIC: Target alignment score
-        # - High positive: LLaVA thinks it looks like target (GOOD for attack)
-        # - Negative: LLaVA thinks it looks like true class (BAD for attack)
-        # ====================================================================
         target_alignment = sim_to_target - sim_to_true
 
         if debug:
