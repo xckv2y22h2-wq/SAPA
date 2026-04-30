@@ -245,7 +245,7 @@ def get_dataset(args):
         transforms.ToTensor(),
     ])
 
-    # ✅ Determine correct image size based on architecture
+    # Determine correct image size based on architecture
     img_size = 224  # Default for most models
     
     if args.arch.startswith('MobileCLIP'):
@@ -731,7 +731,7 @@ def load_model(args, class_names):
         if not (args.arch.endswith("S3") or args.arch.endswith("S4") or args.arch.endswith("L-14")):
             # For S0, S1, S2, B: disable internal normalization
             model_kwargs = {"image_mean": (0, 0, 0), "image_std": (1, 1, 1)}
-            print(f"✓ Using custom normalization for {args.arch}: mean=(0,0,0), std=(1,1,1)")
+            print(f"Using custom normalization for {args.arch}: mean=(0,0,0), std=(1,1,1)")
 
         # Map architecture name
         model, _, preprocess = open_clip.create_model_and_transforms(
