@@ -428,14 +428,14 @@ def evaluate_clean_accuracy(model_type, model_path, dataset, args):
         try:
             with open(cache_file, 'r') as f:
                 cache_data = json.load(f)
-                print(f"✓ Found cached clean accuracy for {model_type} on {dataset}: {cache_data['clean_accuracy']:.2f}%")
+                print(f"Found cached clean accuracy for {model_type} on {dataset}: {cache_data['clean_accuracy']:.2f}%")
                 print(f"  (using cached result from: {clean_result_file})")
                 return cache_data['clean_accuracy']
         except (json.JSONDecodeError, KeyError) as e:
-            print(f"⚠ Error reading cache file {cache_file}: {e}. Will re-evaluate.")
+            print(f"Error reading cache file {cache_file}: {e}. Will re-evaluate.")
 
     if args.force_clean and os.path.exists(cache_file):
-        print(f"⚠ --force_clean set: Ignoring cached result and re-evaluating...")
+        print(f"--force_clean set: Ignoring cached result and re-evaluating...")
 
     print(f"Evaluating clean accuracy for {model_type} on {dataset}...")
 
@@ -456,7 +456,7 @@ def evaluate_clean_accuracy(model_type, model_path, dataset, args):
     print("Running command:", ' '.join(cmd))
     try:
         result = subprocess.run(cmd, check=True)
-        print(f"✓ Successfully evaluated clean accuracy for {model_type} on {dataset}")
+        print(f"Successfully evaluated clean accuracy for {model_type} on {dataset}")
 
         # Parse clean accuracy from the result file
         clean_accuracy = None
@@ -708,9 +708,9 @@ def main():
     
     excel_file = export_summary_to_excel_yaml(models, datasets, attacks, epsilons, config, clean_accuracies)
     
-    print(f"\n📊 Comprehensive Excel analysis exported!")
-    print(f"📁 File location: {excel_file}")
-    print(f"📈 Open in Excel/LibreOffice for interactive analysis")
+    print(f"\n Comprehensive Excel analysis exported!")
+    print(f" File location: {excel_file}")
+    print(f" Open in Excel/LibreOffice for interactive analysis")
     
     print("\n✓ Evaluation complete!")
 
