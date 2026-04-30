@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 '''
 This script evaluates the adversarial robustness of different CLIP models against various attacks.
-It supports evaluating the original CLIP model and several fine-tuned models (TeCoA, PMG, FARE, TRADES, AUDIENCE).
+It supports evaluating the original CLIP model and several fine-tuned models (TeCoA, PMG, FARE, TRADES).
 The script allows for the following attacks:
 - PGD
 - CW
 - AutoAttack
 - SAPA (Semantic Aware Perturbation Attack)
-The script also supports prompt tuning for the AUDIENCE model.
 '''
 
 import argparse
@@ -45,7 +44,7 @@ from sapa.semantic_feature_perturbation_adaptive import SemanticFeatureSpacePert
 from sapa.llava_text_adaption import LLaVATextAdaptation
 from sapa.adversarial_text_generation import MultiModalSemanticAttack
 
-# Priority 1B: Cross-model STA evaluation
+
 try:
     from paper.cross_model_sta_integrated import CrossModelSTACalculator, add_cross_model_sta_to_attack_output
     CROSS_MODEL_STA_AVAILABLE = True
@@ -261,7 +260,7 @@ def get_dataset(args):
     
     print(f"Using image size: {img_size}×{img_size} for {args.arch}")
     
-    # ✅ Create transform based on determined size
+    # Create transform based on determined size
     transform_224 = transforms.Compose([
         transforms.Resize(img_size + 32),  # Resize to slightly larger
         transforms.CenterCrop(img_size),   # Crop to exact size
@@ -727,7 +726,7 @@ def load_model(args, class_names):
     if use_openclip:
         print("Using OpenCLIP to load MobileCLIP...")
         
-        # ✅ CRITICAL: Set image_mean and image_std for MobileCLIP2
+        # CRITICAL: Set image_mean and image_std for MobileCLIP2
         model_kwargs = {}
         if not (args.arch.endswith("S3") or args.arch.endswith("S4") or args.arch.endswith("L-14")):
             # For S0, S1, S2, B: disable internal normalization
@@ -1092,7 +1091,7 @@ def evaluate_robustness(test_loader, texts, model, prompter, add_prompter, promp
             'kappa': 0,
             'debug': args.debug
         }
-    elif args.attack == 'sapa':
+    elif args.attack == 'sapa': # obsoleted, using run_semantic_attack_comparison.py instead 
         # SAPA (Semantic-Aware Perturbation Attack)
         attack_fn = attack_semantic_flow_robust_enhanced
         attack_kwargs = {
