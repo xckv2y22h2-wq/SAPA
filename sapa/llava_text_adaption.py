@@ -21,16 +21,12 @@ class LLaVATextAdaptation:
         )
         self.llava_model.eval()
         
-        # Set pad_token_id to suppress "Setting pad_token_id to eos_token_id" warning
         if self.llava_model.generation_config.pad_token_id is None:
             self.llava_model.generation_config.pad_token_id = self.llava_model.generation_config.eos_token_id
         
-        # CLIP for text encoding
-        # import clip - comment out, we need to load modified_clip
         self.clip_model, _ = clip.load("ViT-B/32", device=device)
     
     def generate_adaptive_caption(self, adv_image_tensor, semantic_anchor_word=None, debug=False):
-        # Convert to PIL
         adv_image_pil = self._tensor_to_pil(adv_image_tensor)
 
         prompt = """<|im_start|>system
@@ -48,7 +44,6 @@ Describe this image in detail in one sentence. Focus on the main object and its 
         ).to(self.device)
 
         with torch.no_grad():
-            # Suppress generation warnings unless in debug mode
             with warnings.catch_warnings():
                 if not debug:
                     warnings.filterwarnings("ignore", message=".*pad_token_id.*")
@@ -72,7 +67,7 @@ Describe this image in detail in one sentence. Focus on the main object and its 
         from PIL import Image
         import numpy as np
         
-        # Handle batch dimension - squeeze if present
+
         if tensor.dim() == 4:
             tensor = tensor.squeeze(0)
         
@@ -89,13 +84,11 @@ Describe this image in detail in one sentence. Focus on the main object and its 
             tokens = clip.tokenize([caption]).to(self.device)
             embed = self.clip_model.encode_text(tokens)
             embed = embed / embed.norm(dim=-1, keepdim=True)
-            # Ensure float32 for consistency with main CLIP model
             embed = embed.float()
         return embed
 
     def compute_semantic_similarity(self, embed1, embed2):
         with torch.no_grad():
-            # Ensure both embeddings have the same dtype (float32)
             embed1 = embed1.float()
             embed2 = embed2.float()
             similarity = (embed1 @ embed2.T).squeeze().item()
@@ -136,14 +129,8 @@ Answer with ONLY the name of the breed you think it is.<|im_end|>
         response = response.split("assistant\n")[-1].strip()
 
         llava_response_embed = self.get_caption_embedding(f"a photo of a {response}")
-
-        # Target: what we want it to look like
         target_embed = self.get_caption_embedding(f"a photo of a {semantic_anchor_word}")
-
-        # True class: what it actually is
         true_embed = self.get_caption_embedding(f"a photo of a {true_class_name}")
-
-        # Compute similarities
         sim_to_target = self.compute_semantic_similarity(llava_response_embed, target_embed)
         sim_to_true = self.compute_semantic_similarity(llava_response_embed, true_embed)
 
