@@ -11,8 +11,6 @@ class AdversarialTextGenerator:
     def __init__(self, device='cuda', use_llava=True):
         self.device = device
         self.use_llava = use_llava
-
-        # Load CLIP for text encoding
         self.clip_model, _ = clip.load("ViT-B/32", device=device)
         self.clip_model.eval()
 
@@ -87,14 +85,11 @@ Be specific and concise (1-2 sentences).<|im_end|>
         return description
 
     def _generate_template(self, target_class):
-        # These templates work with CLIP's understanding
         templates = [
             f"a photo of a {target_class}",
             f"a {target_class} in its typical appearance",
             f"a clear view of a {target_class} showing characteristic features",
         ]
-
-        # Use first template (most compatible with CLIP)
         return templates[0]
 
     def get_text_embedding(self, text):
@@ -123,20 +118,13 @@ class MultiModalSemanticAttack:
         self.device = device
         self.class_names = class_names
 
-        # Initialize adversarial text generator
         self.text_generator = AdversarialTextGenerator(
             device=device,
             use_llava=use_llava_text
         )
-
-        # Precompute class embeddings
         self.class_embeddings = self._compute_class_embeddings()
-
-        # Register hooks for multi-level features
         self.features = {}
         self._register_hooks()
-
-        # Learnable projections for intermediate layers
         intermediate_dim = 768
         target_dim = 512
 
@@ -202,7 +190,6 @@ class MultiModalSemanticAttack:
         use_llava_text=True,
         debug=False
     ):
-        # Handle batch dimension
         if clean_image.dim() == 4:
             clean_image = clean_image.squeeze(0)
 
@@ -211,24 +198,16 @@ class MultiModalSemanticAttack:
             print(f"Multi-Modal Attack: {self.class_names[true_label]} → {semantic_anchor_word}")
             print(f"{'='*70}\n")
 
-        # ===================================================================
         # Step 1: Generate ADVERSARIAL TEXT for target class
-        # ===================================================================
-
         if debug:
             print("[Text Modality] Generating adversarial text...")
-
-        # Generate adversarial text embedding (points toward TARGET)
         adv_text_embed, adv_description = self.text_generator.generate_adversarial_text_embed(
             semantic_anchor_word,
             use_llava=use_llava_text,
             debug=debug
         )
-
         if debug:
             print(f"[Text Modality] Adversarial text: '{adv_description}'")
-
-        # Also get WordNet embedding for comparison
         wordnet_text = f"a photo of a {semantic_anchor_word}"
         wordnet_tokens = clip.tokenize([wordnet_text]).to(self.device)
         with torch.no_grad():
@@ -236,15 +215,9 @@ class MultiModalSemanticAttack:
             wordnet_embed = wordnet_embed / wordnet_embed.norm(dim=-1, keepdim=True)
             wordnet_embed = wordnet_embed.float()
 
-        # ===================================================================
         # Step 2: Semantic-guided initialization using adversarial text
-        # ===================================================================
-
         if debug:
             print("\n[Visual Modality] Semantic-guided initialization...")
-
-        # Blend adversarial text with WordNet
-        # Higher text_weight = more reliance on generated adversarial text
         semantic_target_embed = (1 - text_weight) * wordnet_embed + text_weight * adv_text_embed
         semantic_target_embed = semantic_target_embed / semantic_target_embed.norm(dim=-1, keepdim=True)
 
@@ -257,31 +230,20 @@ class MultiModalSemanticAttack:
         delta.requires_grad = True
         optimizer = torch.optim.Adam([delta], lr=alpha)
 
-        # ===================================================================
         # Step 3: Joint multi-modal optimization
-        # ===================================================================
-
         if debug:
             print("\n[Multi-Modal] Joint optimization loop...")
 
         pred_idx = -1
         for iteration in range(attack_iters):
-            # Forward pass
             adv_image = torch.clamp(clean_image + delta, 0, 1)
-
-            # Get image embedding
             adv_img_embed = self.clip_model.encode_image(adv_image.unsqueeze(0))
             adv_img_embed = adv_img_embed / adv_img_embed.norm(dim=-1, keepdim=True)
             adv_img_embed = adv_img_embed.float()
 
-            # ===================================================================
             # Multi-Modal Loss
-            # ===================================================================
-
             total_loss = 0
-
-            # Loss 1: Alignment with adversarial text (KEY NOVELTY)
-            # This pulls the image toward the TEXTUAL target
+            # Loss 1: Alignment with adversarial text
             text_alignment = (adv_img_embed @ semantic_target_embed.T).squeeze()
             L_text = -text_alignment
             total_loss += 0.4 * L_text
@@ -290,11 +252,9 @@ class MultiModalSemanticAttack:
             feat_3 = self.features['layer_3']
             feat_6 = self.features['layer_6']
             feat_9 = self.features['layer_9']
-
             L_layer3 = self._compute_layer_alignment_loss(feat_3, semantic_target_embed, 'layer_3')
             L_layer6 = self._compute_layer_alignment_loss(feat_6, semantic_target_embed, 'layer_6')
             L_layer9 = self._compute_layer_alignment_loss(feat_9, semantic_target_embed, 'layer_9')
-
             total_loss += 0.15 * L_layer3
             total_loss += 0.2 * L_layer6
             total_loss += 0.25 * L_layer9
@@ -303,13 +263,12 @@ class MultiModalSemanticAttack:
             true_class_embed = self.class_embeddings[true_label]
             true_similarity = (adv_img_embed @ true_class_embed.unsqueeze(0).T).squeeze()
             L_adversarial = true_similarity
-
             if pred_idx == true_label:
                 total_loss += 0.5 * L_adversarial
             else:
                 total_loss += 0.1 * L_adversarial
 
-            # Optimization step
+            # Optimization 
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()
