@@ -1,14 +1,5 @@
 """
 CLIP-based Semantic Anchor Selection
-
-Instead of relying on WordNet (which has low coverage for many visual concepts),
-this module uses CLIP embeddings to find semantically related classes that can
-serve as effective attack targets.
-
-Strategy:
-1. Compute CLIP embeddings for all class names
-2. For each source class, find other classes with moderate similarity
-3. Select anchors that are similar enough to be confusable but different enough to be misclassified
 """
 
 import torch
@@ -17,13 +8,6 @@ from typing import List, Optional, Tuple, Dict
 
 
 class CLIPSemanticAnchor:
-    """
-    CLIP-based Semantic Anchor Word Generation
-    
-    Uses CLIP text embeddings to find semantically related classes
-    that can serve as effective adversarial targets.
-    """
-    
     def __init__(
         self,
         clip_model,
