@@ -3,18 +3,6 @@ import torch.nn as nn
 from modified_clip import clip
 
 class SemanticFeatureSpacePerturbation:
-    """
-    Phase 2: Core Novel Perturbation Generation Mechanism
-
-    Improved version with:
-    - Gradient Embedding Optimization (Fix 2): Makes semantic target learnable
-    - Final-layer-only optimization: Uses only final embedding (not multi-layer)
-    - Drift regularization: Prevents embedding from drifting too far from WordNet anchor
-    - Adaptive adversarial loss: Reduces pressure once misclassified
-
-    This implementation achieves +140% STA improvement over static embeddings.
-    """
-
     def __init__(self, clip_model, llava_adapter, device, class_names):
         self.clip_model = clip_model
         self.llava_adapter = llava_adapter
