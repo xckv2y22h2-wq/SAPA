@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-WGSMA (WordNet-Guided Semantic Multi-Modal Attack) on ImageNet-100
+SAPA on ImageNet-100
 
 This script implements the complete WGSMA attack pipeline with configurable epsilon.
-Priority 1B: Cross-Model STA Evaluation for circularity validation.
+
 
 Usage:
     python run_semantic_attack_config.py --epsilon 0.031
     python run_semantic_attack_config.py --epsilon 0.062 --num_samples 200
     python run_semantic_attack_config.py --epsilon 0.015 --attack_iters 50
     python run_semantic_attack_config.py --model TeCoA --epsilon 0.031
-    python run_semantic_attack_config.py --compute_cross_model_sta  # Priority 1B
+    python run_semantic_attack_config.py --compute_cross_model_sta
 """
 
 import torch
